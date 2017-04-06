@@ -175,6 +175,7 @@ typedef enum {
 	oPubkeyAcceptedAlgorithms, oCASignatureAlgorithms, oProxyJump,
 	oSecurityKeyProvider, oKnownHostsCommand, oRequiredRSASize,
 	oEnableEscapeCommandline,
+	oPasswordCommand,
 	oIgnore, oIgnoredUnknownOption, oDeprecated, oUnsupported
 } OpCodes;
 
@@ -322,6 +323,7 @@ static struct {
 	{ "knownhostscommand", oKnownHostsCommand },
 	{ "requiredrsasize", oRequiredRSASize },
 	{ "enableescapecommandline", oEnableEscapeCommandline },
+	{ "passwordcommand", oPasswordCommand },
 
 	{ NULL, oBadOption }
 };
@@ -2188,6 +2190,10 @@ parse_pubkey_algos:
 		intptr = &options->required_rsa_size;
 		goto parse_int;
 
+	case oPasswordCommand:
+		charptr = &options->password_command;
+		goto parse_command;
+
 	case oDeprecated:
 		debug("%s line %d: Deprecated option \"%s\"",
 		    filename, linenum, keyword);
@@ -2438,6 +2444,7 @@ initialize_options(Options * options)
 	options->known_hosts_command = NULL;
 	options->required_rsa_size = -1;
 	options->enable_escape_commandline = -1;
+	options->password_command = NULL;
 }
 
 /*
@@ -2682,6 +2689,7 @@ fill_default_options(Options * options)
 	CLEAR_ON_NONE(options->pkcs11_provider);
 	CLEAR_ON_NONE(options->sk_provider);
 	CLEAR_ON_NONE(options->known_hosts_command);
+	CLEAR_ON_NONE(options->password_command);
 	if (options->jump_host != NULL &&
 	    strcmp(options->jump_host, "none") == 0 &&
 	    options->jump_port == 0 && options->jump_user == NULL) {
@@ -3357,6 +3365,7 @@ dump_client_config(Options *o, const char *host)
 	dump_cfg_string(oRevokedHostKeys, o->revoked_host_keys);
 	dump_cfg_string(oXAuthLocation, o->xauth_location);
 	dump_cfg_string(oKnownHostsCommand, o->known_hosts_command);
+	dump_cfg_string(oPasswordCommand, o->password_command);
 
 	/* Forwards */
 	dump_cfg_forwards(oDynamicForward, o->num_local_forwards, o->local_forwards);
