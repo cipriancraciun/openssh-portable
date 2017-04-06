@@ -1396,6 +1396,16 @@ main(int ac, char **av)
 			fatal_fr(r, "buffer error");
 	}
 
+	if (options.password_command != NULL) {
+		debug3("expanding PasswordCommand: %s", options.password_command);
+		cp = options.password_command;
+		options.password_command = default_client_percent_expand(cp,
+		    cinfo);
+		debug3("expanded PasswordCommand: %s", options.password_command);
+		free(cp);
+	}
+
+
 	if (options.control_path != NULL) {
 		cp = tilde_expand_filename(options.control_path, getuid());
 		free(options.control_path);
