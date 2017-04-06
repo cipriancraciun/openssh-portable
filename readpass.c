@@ -191,3 +191,69 @@ ask_permission(const char *fmt, ...)
 
 	return (allowed);
 }
+
+char *
+read_passphrase_from_command(const char *command)
+{
+	char *shell;
+	pid_t pid, ret;
+	int p[2], status;
+	void (*osigchld)(int);
+	size_t len;
+	char *pass;
+	char buf[1024];
+
+	if ((shell = getenv("SHELL")) == NULL || *shell == '\0')
+		shell = _PATH_BSHELL;
+
+	if (pipe(p) < 0) {
+		error("password_command: pipe: %s", strerror(errno));
+		return xstrdup("");
+	}
+	osigchld = signal(SIGCHLD, SIG_DFL);
+	if ((pid = fork()) < 0) {
+		error("password_command: fork: %s", strerror(errno));
+		signal(SIGCHLD, osigchld);
+		return xstrdup("");
+	}
+	if (pid == 0) {
+		permanently_drop_suid(getuid());
+		close(p[0]);
+		if (dup2(p[1], STDOUT_FILENO) < 0)
+			fatal("password_command: dup2: %s", strerror(errno));
+		
+		debug3("Executing %s -c \"%s\"", shell, command);
+		execl(shell, shell, "-c", command, (char *)NULL);
+		error("Couldn't execute %s -c \"%s\": %s",
+		    shell, command, strerror(errno));
+		_exit(1);
+	}
+	close(p[1]);
+
+	len = 0;
+	do {
+		ssize_t r = read(p[0], buf + len, sizeof(buf) - 1 - len);
+
+		if (r == -1 && errno == EINTR)
+			continue;
+		if (r <= 0)
+			break;
+		len += r;
+	} while (sizeof(buf) - 1 - len > 0);
+	buf[len] = '\0';
+
+	close(p[0]);
+	while ((ret = waitpid(pid, &status, 0)) < 0)
+		if (errno != EINTR)
+			break;
+	signal(SIGCHLD, osigchld);
+	if (ret == -1 || !WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+		explicit_bzero(buf, sizeof(buf));
+		return xstrdup("");
+	}
+
+	buf[strcspn(buf, "\r\n")] = '\0';
+	pass = xstrdup(buf);
+	explicit_bzero(buf, sizeof(buf));
+	return pass;
+}

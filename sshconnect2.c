@@ -906,7 +906,10 @@ userauth_passwd(Authctxt *authctxt)
 
 	snprintf(prompt, sizeof(prompt), "%.30s@%.128s's password: ",
 	    authctxt->server_user, host);
-	password = read_passphrase(prompt, 0);
+	if (options.password_command == NULL)
+		password = read_passphrase(prompt, 0);
+	else
+		password = read_passphrase_from_command(options.password_command);
 	packet_start(SSH2_MSG_USERAUTH_REQUEST);
 	packet_put_cstring(authctxt->server_user);
 	packet_put_cstring(authctxt->service);
