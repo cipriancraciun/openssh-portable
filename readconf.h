@@ -165,6 +165,8 @@ typedef struct {
 	int	jump_port;
 	char   *jump_extra;
 
+	char   *password_command;
+
 	char	*ignored_unknown; /* Pattern list of unknown tokens to ignore */
 }       Options;
 
