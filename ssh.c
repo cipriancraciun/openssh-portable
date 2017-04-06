@@ -1213,6 +1213,25 @@ main(int ac, char **av)
 		free(cp);
 	}
 
+	if (options.password_command != NULL) {
+		debug3("expanding PasswordCommand: %s", options.password_command);
+		cp = options.password_command;
+		options.password_command = percent_expand(cp,
+		    "C", conn_hash_hex,
+		    "L", shorthost,
+		    "d", pw->pw_dir,
+		    "h", host,
+		    "l", thishost,
+		    "n", host_arg,
+		    "p", portstr,
+		    "r", options.user,
+		    "u", pw->pw_name,
+		    (char *)NULL);
+		debug3("expanded PasswordCommand: %s", options.password_command);
+		free(cp);
+	}
+
+
 	if (options.control_path != NULL) {
 		cp = tilde_expand_filename(options.control_path,
 		    original_real_uid);
