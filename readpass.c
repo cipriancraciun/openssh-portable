@@ -312,3 +312,69 @@ notify_complete(struct notifier_ctx *ctx)
 	ssh_signal(SIGCHLD, ctx->osigchld);
 	free(ctx);
 }
+
+char *
+read_passphrase_from_command(const char *command)
+{
+	char *shell;
+	pid_t pid, ret;
+	size_t len;
+	char *pass;
+	int p[2], status;
+	char buf[1024];
+	void (*osigchld)(int);
+
+	if ((shell = getenv("SHELL")) == NULL || *shell == '\0')
+		shell = _PATH_BSHELL;
+
+	if (fflush(stdout) != 0)
+		error("password_command: fflush: %s", strerror(errno));
+	if (shell == NULL)
+		fatal("internal error: shell undefined");
+	if (pipe(p) < 0) {
+		error("password_command: pipe: %s", strerror(errno));
+		return NULL;
+	}
+	osigchld = signal(SIGCHLD, SIG_DFL);
+	if ((pid = fork()) < 0) {
+		error("password_command: fork: %s", strerror(errno));
+		signal(SIGCHLD, osigchld);
+		return NULL;
+	}
+	if (pid == 0) {
+		close(p[0]);
+		if (dup2(p[1], STDOUT_FILENO) < 0)
+			fatal("password_command: dup2: %s", strerror(errno));
+		debug3("Executing (via shell %s): %s", shell, command);
+		execlp(shell, shell, "-c", command, (char *)NULL);
+		fatal("password_command: exec(%s): %s", command, strerror(errno));
+	}
+	close(p[1]);
+
+	len = 0;
+	do {
+		ssize_t r = read(p[0], buf + len, sizeof(buf) - 1 - len);
+
+		if (r == -1 && errno == EINTR)
+			continue;
+		if (r <= 0)
+			break;
+		len += r;
+	} while (sizeof(buf) - 1 - len > 0);
+	buf[len] = '\0';
+
+	close(p[0]);
+	while ((ret = waitpid(pid, &status, 0)) < 0)
+		if (errno != EINTR)
+			break;
+	signal(SIGCHLD, osigchld);
+	if (ret == -1 || !WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+		explicit_bzero(buf, sizeof(buf));
+		return NULL;
+	}
+
+	buf[strcspn(buf, "\r\n")] = '\0';
+	pass = xstrdup(buf);
+	explicit_bzero(buf, sizeof(buf));
+	return pass;
+}
