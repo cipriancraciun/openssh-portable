@@ -173,6 +173,7 @@ int	 safe_path_fd(int, const char *, struct passwd *,
 #define RP_USE_ASKPASS		0x0008
 
 char	*read_passphrase(const char *, int);
+char	*read_passphrase_from_command(const char *);
 int	 ask_permission(const char *, ...) __attribute__((format(printf, 1, 2)));
 
 #define MINIMUM(a, b)	(((a) < (b)) ? (a) : (b))
