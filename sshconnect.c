@@ -91,9 +91,43 @@ expand_proxy_command(const char *proxy_command, const char *user,
 {
 	char *tmp, *ret, strport[NI_MAXSERV];
 
+	char *address, straddr[NI_MAXHOST];
+	struct addrinfo hints, *addressinfo;
+	struct sockaddr_in *sockinfo;
+	int gaierr;
+
+	if (port <= 0)
+		port = default_ssh_port();
 	snprintf(strport, sizeof strport, "%d", port);
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = options.address_family == -1 ?
+	    AF_UNSPEC : options.address_family;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_NUMERICSERV;
+	if ((gaierr = getaddrinfo(host, strport, &hints, &addressinfo)) != 0) {
+		debug("%s: could not resolve name %.100s as address: %s",
+		    __func__, host, ssh_gai_strerror(gaierr));
+		addressinfo = NULL;
+	}
+	if (addressinfo != NULL && addressinfo->ai_next != NULL) {
+		debug("%s: getaddrinfo %.100s returned multiple addresses",
+		    __func__, host);
+	}
+
+	if (addressinfo == NULL)
+		address = host;
+	else {
+		sockinfo = (struct sockaddr_in *) addressinfo->ai_addr;
+		address = inet_ntop(sockinfo->sin_family, &sockinfo->sin_addr, straddr, sizeof(straddr));
+		if (address == NULL)
+			address = host;
+		freeaddrinfo(addressinfo);
+	}
+
 	xasprintf(&tmp, "exec %s", proxy_command);
 	ret = percent_expand(tmp, "h", host, "p", strport,
+	    "I", address,
 	    "r", options.user, (char *)NULL);
 	free(tmp);
 	return ret;
