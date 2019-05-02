@@ -1310,6 +1310,7 @@ main(int ac, char **av)
 		    "p", portstr,
 		    "r", options.user,
 		    "u", pw->pw_name,
+		    "A", (options.host_key_alias ? options.host_key_alias : host),
 		    (char *)NULL);
 		debug3("expanded RemoteCommand: %s", options.remote_command);
 		free(cp);
@@ -1332,6 +1333,7 @@ main(int ac, char **av)
 		    "r", options.user,
 		    "u", pw->pw_name,
 		    "i", uidstr,
+		    "A", (options.host_key_alias ? options.host_key_alias : host),
 		    (char *)NULL);
 		free(cp);
 	}
@@ -1453,6 +1455,7 @@ main(int ac, char **av)
 			    "l", thishost,
 			    "r", options.user,
 			    "u", pw->pw_name,
+			    "A", (options.host_key_alias ? options.host_key_alias : host),
 			    (char *)NULL);
 			free(p);
 			/*
@@ -1899,6 +1902,7 @@ ssh_session2(struct ssh *ssh, struct passwd *pw)
 		    "r", options.user,
 		    "u", pw->pw_name,
 		    "T", tun_fwd_ifname == NULL ? "NONE" : tun_fwd_ifname,
+		    "A", (options.host_key_alias ? options.host_key_alias : host),
 		    (char *)NULL);
 		debug3("expanded LocalCommand: %s", options.local_command);
 		free(cp);
@@ -2052,7 +2056,9 @@ load_public_identity_files(struct passwd *pw)
 		cp = tilde_expand_filename(options.identity_files[i], getuid());
 		filename = percent_expand(cp, "d", pw->pw_dir,
 		    "u", pw->pw_name, "l", thishost, "h", host,
-		    "r", options.user, (char *)NULL);
+		    "r", options.user,
+		    "A", (options.host_key_alias ? options.host_key_alias : host),
+		    (char *)NULL);
 		free(cp);
 		check_load(sshkey_load_public(filename, &public, NULL),
 		    filename, "pubkey");
@@ -2108,6 +2114,7 @@ load_public_identity_files(struct passwd *pw)
 		    "l", thishost,
 		    "r", options.user,
 		    "u", pw->pw_name,
+		    "A", (options.host_key_alias ? options.host_key_alias : host),
 		    (char *)NULL);
 		free(cp);
 
