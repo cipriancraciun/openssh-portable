@@ -174,6 +174,7 @@ typedef enum {
 	oStreamLocalBindMask, oStreamLocalBindUnlink, oRevokedHostKeys,
 	oFingerprintHash, oUpdateHostkeys, oHostbasedKeyTypes,
 	oPubkeyAcceptedKeyTypes, oCASignatureAlgorithms, oProxyJump,
+	oPasswordCommand,
 	oIgnore, oIgnoredUnknownOption, oDeprecated, oUnsupported
 } OpCodes;
 
@@ -310,6 +311,7 @@ static struct {
 	{ "pubkeyacceptedkeytypes", oPubkeyAcceptedKeyTypes },
 	{ "ignoreunknown", oIgnoreUnknown },
 	{ "proxyjump", oProxyJump },
+	{ "passwordcommand", oPasswordCommand },
 
 	{ NULL, oBadOption }
 };
@@ -1732,6 +1734,10 @@ parse_keytypes:
 			*charptr = xstrdup(arg);
 		break;
 
+	case oPasswordCommand:
+		charptr = &options->password_command;
+		goto parse_command;
+
 	case oDeprecated:
 		debug("%s line %d: Deprecated option \"%s\"",
 		    filename, linenum, keyword);
@@ -1938,6 +1944,7 @@ initialize_options(Options * options)
 	options->update_hostkeys = -1;
 	options->hostbased_key_types = NULL;
 	options->pubkey_key_types = NULL;
+	options->password_command = NULL;
 }
 
 /*
@@ -2148,6 +2155,7 @@ fill_default_options(Options * options)
 	CLEAR_ON_NONE(options->control_path);
 	CLEAR_ON_NONE(options->revoked_host_keys);
 	CLEAR_ON_NONE(options->pkcs11_provider);
+	CLEAR_ON_NONE(options->password_command);
 	if (options->jump_host != NULL &&
 	    strcmp(options->jump_host, "none") == 0 &&
 	    options->jump_port == 0 && options->jump_user == NULL) {
@@ -2668,6 +2676,7 @@ dump_client_config(Options *o, const char *host)
 	dump_cfg_string(oPubkeyAcceptedKeyTypes, o->pubkey_key_types);
 	dump_cfg_string(oRevokedHostKeys, o->revoked_host_keys);
 	dump_cfg_string(oXAuthLocation, o->xauth_location);
+	dump_cfg_string(oPasswordCommand, o->password_command);
 
 	/* Forwards */
 	dump_cfg_forwards(oDynamicForward, o->num_local_forwards, o->local_forwards);
