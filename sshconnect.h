@@ -65,7 +65,8 @@ struct ssh_conn_info;
 	"h", conn_info->remhost, \
 	"r", conn_info->remuser, \
 	"u", conn_info->locuser, \
-	"j", conn_info->jmphost
+	"j", conn_info->jmphost, \
+	"A", (conn_info->keyalias ? conn_info->keyalias : conn_info->remhost)
 
 int	 ssh_connect(struct ssh *, const char *, const char *,
 	    struct addrinfo *, struct sockaddr_storage *, u_short,
