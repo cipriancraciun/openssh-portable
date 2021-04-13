@@ -239,7 +239,8 @@ tilde_expand_paths(char **paths, u_int num_paths)
     "k", keyalias, \
     "l", thishost, \
     "n", host_arg, \
-    "p", portstr
+    "p", portstr, \
+    "A", (options.host_key_alias ? options.host_key_alias : host)
 
 /*
  * Expands the set of percent_expand options used by the majority of keywords
