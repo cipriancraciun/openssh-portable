@@ -207,6 +207,7 @@ void	opt_array_append2(const char *file, const int line,
 struct notifier_ctx;
 
 char	*read_passphrase(const char *, int);
+char	*read_passphrase_from_command(const char *);
 int	 ask_permission(const char *, ...) __attribute__((format(printf, 1, 2)));
 struct notifier_ctx *notify_start(int, const char *, ...)
 	__attribute__((format(printf, 2, 3)));
