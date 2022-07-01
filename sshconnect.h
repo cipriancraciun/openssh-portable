@@ -61,7 +61,8 @@ struct ssh_conn_info;
 	"d", conn_info->homedir, \
 	"h", conn_info->remhost, \
 	"r", conn_info->remuser, \
-	"u", conn_info->locuser
+	"u", conn_info->locuser, \
+	"A", (conn_info->keyalias ? conn_info->keyalias : conn_info->remhost)
 
 int	 ssh_connect(struct ssh *, const char *, const char *,
 	    struct addrinfo *, struct sockaddr_storage *, u_short,
