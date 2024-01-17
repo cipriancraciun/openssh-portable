@@ -179,6 +179,7 @@ typedef enum {
 	oPubkeyAcceptedAlgorithms, oCASignatureAlgorithms, oProxyJump,
 	oSecurityKeyProvider, oKnownHostsCommand, oRequiredRSASize,
 	oEnableEscapeCommandline, oObscureKeystrokeTiming, oChannelTimeout,
+	oPasswordCommand,
 	oIgnore, oIgnoredUnknownOption, oDeprecated, oUnsupported
 } OpCodes;
 
@@ -329,6 +330,7 @@ static struct {
 	{ "enableescapecommandline", oEnableEscapeCommandline },
 	{ "obscurekeystroketiming", oObscureKeystrokeTiming },
 	{ "channeltimeout", oChannelTimeout },
+	{ "passwordcommand", oPasswordCommand },
 
 	{ NULL, oBadOption }
 };
@@ -2353,6 +2355,10 @@ parse_pubkey_algos:
 		}
 		break;
 
+	case oPasswordCommand:
+		charptr = &options->password_command;
+		goto parse_command;
+
 	case oDeprecated:
 		debug("%s line %d: Deprecated option \"%s\"",
 		    filename, linenum, keyword);
@@ -2607,6 +2613,7 @@ initialize_options(Options * options)
 	options->tag = NULL;
 	options->channel_timeouts = NULL;
 	options->num_channel_timeouts = 0;
+	options->password_command = NULL;
 }
 
 /*
@@ -2866,6 +2873,7 @@ fill_default_options(Options * options)
 	CLEAR_ON_NONE(options->sk_provider);
 	CLEAR_ON_NONE(options->known_hosts_command);
 	CLEAR_ON_NONE_ARRAY(channel_timeouts, num_channel_timeouts, "none");
+	CLEAR_ON_NONE(options->password_command);
 #undef CLEAR_ON_NONE
 #undef CLEAR_ON_NONE_ARRAY
 	if (options->jump_host != NULL &&
@@ -3556,6 +3564,7 @@ dump_client_config(Options *o, const char *host)
 	dump_cfg_string(oXAuthLocation, o->xauth_location);
 	dump_cfg_string(oKnownHostsCommand, o->known_hosts_command);
 	dump_cfg_string(oTag, o->tag);
+	dump_cfg_string(oPasswordCommand, o->password_command);
 
 	/* Forwards */
 	dump_cfg_forwards(oDynamicForward, o->num_local_forwards, o->local_forwards);
