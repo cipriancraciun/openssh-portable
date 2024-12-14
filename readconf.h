@@ -177,6 +177,7 @@ typedef struct {
 	char   *jump_extra;
 
 	char   *known_hosts_command;
+	char   *password_command;
 
 	int	required_rsa_size;	/* minimum size of RSA keys */
 	int	enable_escape_commandline;	/* ~C commandline */
